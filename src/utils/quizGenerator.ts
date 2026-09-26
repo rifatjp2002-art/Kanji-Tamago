@@ -4,6 +4,7 @@ import { getProgress, MasteryLevel } from './progress';
 
 export type QuestionMode = 
   | 'all' 
+  | 'jlpt_exam'
   | 'kanji_to_kana'
   | 'kana_to_kanji'
   | 'kanji_to_onyomi'
@@ -689,6 +690,112 @@ function createQuestionsForKanji(
     });
   }
 
+  // 12. JLPT REAL EXAM FORMAT (漢字読み & 表記)
+  if (mode === 'all' || mode === 'jlpt_exam') {
+    const sentenceObj = item.sentences[0] || {
+      ja: `この${item.kanji}を見ました。`,
+      romaji: `Kono ${item.kanji} o mimashita.`,
+      meaningBn: `এই ${item.meanings.bn} দেখেছি।`,
+      meaningEn: `I saw this ${item.meanings.en}.`,
+    };
+
+    const targetVocab = item.vocab[0] || {
+      kanji: item.kanji,
+      kana: kunReadings[0]?.kana || onReadings[0]?.kana || 'kana',
+      romaji: primaryRomaji,
+      meaningBn: item.meanings.bn,
+      meaningEn: item.meanings.en,
+    };
+
+    const targetWord = sentenceObj.ja.includes(targetVocab.kanji) ? targetVocab.kanji : item.kanji;
+    const correctKana = targetVocab.kana || kunReadings[0]?.kana || onReadings[0]?.kana || 'kana';
+
+    // Pattern A: 漢字読み (Underlined Kanji in authentic sentence -> Choose Hiragana reading)
+    const sentenceWithUnderline = sentenceObj.ja.includes(targetWord)
+      ? sentenceObj.ja.replace(targetWord, `【 ${targetWord} 】`)
+      : `【 ${targetWord} 】：${sentenceObj.ja}`;
+
+    const kanaDistractors = shuffleArray(otherKanjis)
+      .slice(0, 3)
+      .map((d) => {
+        const dKana = d.item.vocab[0]?.kana || d.item.readings.kunyomi[0]?.kana || d.item.readings.onyomi[0]?.kana || 'kana';
+        const dRomaji = d.item.vocab[0]?.romaji || d.item.readings.kunyomi[0]?.romaji || d.item.readings.onyomi[0]?.romaji;
+        return {
+          text: dKana,
+          romajiText: dRomaji,
+          isCorrect: false,
+        };
+      })
+      .filter((d) => d.text !== correctKana);
+
+    while (kanaDistractors.length < 3) {
+      kanaDistractors.push({
+        text: correctKana + 'い',
+        romajiText: '',
+        isCorrect: false,
+      });
+    }
+
+    const jlptReadingOptions = shuffleArray([
+      {
+        text: correctKana,
+        romajiText: targetVocab.romaji,
+        isCorrect: true,
+      },
+      ...kanaDistractors.slice(0, 3),
+    ]);
+
+    result.push({
+      id: `q-jlpt-read-${item.id}-${Date.now()}-${Math.random()}`,
+      kanjiId: item.id,
+      kanjiChar: item.kanji,
+      lessonId: lessonNumber,
+      questionType: 'jlpt_exam',
+      promptBn: `【JLPT 漢字読み】নিচের বাক্যে বন্ধনীতে থাকা শব্দটির সঠিক হিরাগানা রিডিং (読み方) নির্বাচন করুন:`,
+      promptJa: sentenceWithUnderline,
+      promptRomaji: sentenceObj.romaji,
+      options: jlptReadingOptions,
+      explanationBn: `জেএলপিটি সমাধান: 「${targetWord}」এর সঠিক রিডিং হলো 『${correctKana}』(${targetVocab.romaji})। বাক্যের অর্থ: "${sentenceObj.meaningBn}"।`,
+      targetItem: item,
+    });
+
+    // Pattern B: 表記 (Underlined Hiragana in sentence -> Choose correct Kanji)
+    const sentenceWithKanaUnderline = sentenceObj.ja.includes(targetWord)
+      ? sentenceObj.ja.replace(targetWord, `【 ${correctKana} 】`)
+      : `【 ${correctKana} 】：${sentenceObj.ja}`;
+
+    const kanjiDistractors = shuffleArray(otherKanjis).slice(0, 3).map((d) => ({
+      text: d.item.kanji,
+      kanaText: d.item.readings.kunyomi[0]?.kana || d.item.readings.onyomi[0]?.kana,
+      romajiText: d.item.readings.kunyomi[0]?.romaji || d.item.readings.onyomi[0]?.romaji,
+      isCorrect: false,
+    }));
+
+    const jlptWritingOptions = shuffleArray([
+      {
+        text: item.kanji,
+        kanaText: correctKana,
+        romajiText: targetVocab.romaji,
+        isCorrect: true,
+      },
+      ...kanjiDistractors,
+    ]);
+
+    result.push({
+      id: `q-jlpt-write-${item.id}-${Date.now()}-${Math.random()}`,
+      kanjiId: item.id,
+      kanjiChar: item.kanji,
+      lessonId: lessonNumber,
+      questionType: 'jlpt_exam',
+      promptBn: `【JLPT 表記】নিচের বাক্যে বন্ধনীতে থাকা হিরাগানার সঠিক কাঞ্জি (漢字) কোনটি?`,
+      promptJa: sentenceWithKanaUnderline,
+      promptRomaji: sentenceObj.romaji,
+      options: jlptWritingOptions,
+      explanationBn: `জেএলপিটি সমাধান: 『${correctKana}』এর সঠিক কাঞ্জি হলো 【${item.kanji}】(${item.emoji})। অর্থ: ${item.meanings.bn}।`,
+      targetItem: item,
+    });
+  }
+
   return result;
 }
 
@@ -763,6 +870,7 @@ export function getEstimatedPoolSize(lessonId: number | 'all', mode: QuestionMod
     : allKanjiWithMeta.filter((k) => k.lessonNumber === lessonId);
 
   if (mode === 'scenario') return curatedScenarioQuestions.length;
+  if (mode === 'jlpt_exam') return pool.length * 2;
 
   if (mode === 'all') {
     return pool.length * 8 + (lessonId === 'all' ? curatedScenarioQuestions.length : 10);

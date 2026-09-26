@@ -11,11 +11,34 @@ export function usePWAInstall() {
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
-    // Detect standalone mode (already installed)
+    // Detect standalone mode (already running as installed app)
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
       (window.navigator as unknown as { standalone?: boolean }).standalone === true;
     setIsInstalled(isStandalone);
+
+    // Listen for display-mode changes (e.g. running as window vs browser tab)
+    const mediaQuery = window.matchMedia('(display-mode: standalone)');
+    const handleDisplayChange = (e: MediaQueryListEvent) => {
+      setIsInstalled(e.matches);
+    };
+    try {
+      mediaQuery.addEventListener('change', handleDisplayChange);
+    } catch {
+      // Legacy browser support
+    }
+
+    // Check if app is already installed in Chromium via getInstalledRelatedApps
+    if (!isStandalone && 'getInstalledRelatedApps' in navigator) {
+      (navigator as unknown as { getInstalledRelatedApps: () => Promise<unknown[]> })
+        .getInstalledRelatedApps()
+        .then((apps) => {
+          if (apps && apps.length > 0) {
+            setIsInstalled(true);
+          }
+        })
+        .catch(() => {});
+    }
 
     // Detect iOS devices
     const userAgent = window.navigator.userAgent.toLowerCase();
@@ -25,6 +48,8 @@ export function usePWAInstall() {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
+      // Browser is offering installation prompt, meaning it is not installed or uninstalled
+      setIsInstalled(false);
     };
 
     const handleAppInstalled = () => {
@@ -36,6 +61,11 @@ export function usePWAInstall() {
     window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
+      try {
+        mediaQuery.removeEventListener('change', handleDisplayChange);
+      } catch {
+        // Legacy
+      }
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };

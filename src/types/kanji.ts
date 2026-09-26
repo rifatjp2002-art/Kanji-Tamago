@@ -18,6 +18,7 @@ export interface VocabWord {
 
 export interface SentenceItem {
   ja: string;
+  kana?: string;
   romaji: string;
   meaningEn: string;
   meaningBn: string;

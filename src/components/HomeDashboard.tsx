@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { Lesson } from '../types/kanji';
 import { getProgress } from '../utils/progress';
 import { speakJapanese } from '../utils/speech';
+import { PWAInstallButton } from './PWAInstallButton';
+import { usePWAInstall } from '../utils/usePWAInstall';
 import {
   BookOpen,
   Sparkles,
@@ -42,6 +44,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   onGoToFlashcards,
   onGoToQuiz,
 }) => {
+  const { isInstalled } = usePWAInstall();
   const progress = useMemo(() => getProgress(), []);
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
@@ -139,6 +142,36 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           卵
         </div>
       </section>
+
+      {/* PWA Mobile & PC Install Banner (Hides automatically when installed) */}
+      {!isInstalled && (
+        <section className="relative overflow-hidden rounded-3xl border border-amber-500/30 bg-gradient-to-r from-[#1b1e28] via-[#1c2230] to-[#161a24] p-5 sm:p-6 shadow-xl">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+            <div className="flex items-start gap-3.5">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500/20 text-2xl text-amber-400 border border-amber-500/30 shadow-md">
+                📱
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-serif text-base sm:text-lg font-bold text-white">
+                    মোবাইল বা কম্পিউটারে অ্যাপ ইনস্টল করুন
+                  </h3>
+                  <span className="rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                    PWA Ready
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-stone-300 leading-relaxed max-w-xl">
+                  হোম স্ক্রিন থেকে ১-ট্যাপে নেটিভ অ্যাপের মতো চালু করুন। <strong>ইন্টারনেট ছাড়াও ১০০% অফলাইনে</strong> কাঞ্জি লেসন, ফ্ল্যাশকার্ড ও অডিও উচ্চারণ কাজ করবে!
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0">
+              <PWAInstallButton variant="hero" />
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* 2. User Progress Dashboard (Live Tracking Metrics) */}
       <section className="rounded-3xl border border-[#262c3b] bg-[#141822] p-6 sm:p-8 shadow-lg">

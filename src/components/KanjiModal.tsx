@@ -16,6 +16,11 @@ export const KanjiModal: React.FC<KanjiModalProps> = ({
 }) => {
   if (!item) return null;
 
+  const primaryReading =
+    item.readings.kunyomi[0]?.kana?.replace(/[~-]/g, '') ||
+    item.readings.onyomi[0]?.kana?.replace(/[~-]/g, '') ||
+    '';
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/60 p-4 backdrop-blur-xs">
       <div
@@ -37,7 +42,7 @@ export const KanjiModal: React.FC<KanjiModalProps> = ({
               <span className="font-serif text-6xl font-bold">{item.kanji}</span>
             </div>
             <button
-              onClick={() => speakJapanese(item.kanji)}
+              onClick={() => speakJapanese(item.kanji, primaryReading)}
               className="mt-2 flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1 text-xs font-medium text-stone-700 hover:bg-stone-50 hover:text-amber-800 transition-colors"
             >
               <Volume2 className="h-3.5 w-3.5" />
@@ -135,8 +140,9 @@ export const KanjiModal: React.FC<KanjiModalProps> = ({
                     <span className="font-serif text-sm font-bold text-stone-900">{v.kanji}</span>
                     {toggles.showKana && <span className="text-amber-900 font-medium text-[11px]">({v.kana})</span>}
                     <button
-                      onClick={() => speakJapanese(v.kanji)}
+                      onClick={() => speakJapanese(v.kanji, v.kana)}
                       className="text-stone-400 hover:text-amber-800 transition-colors"
+                      title={`উচ্চারণ শুনুন (${v.kana})`}
                     >
                       <Volume2 className="h-3 w-3" />
                     </button>
@@ -178,8 +184,9 @@ export const KanjiModal: React.FC<KanjiModalProps> = ({
                     <span className="font-semibold text-stone-900 text-sm">{s.ja}</span>
                   </div>
                   <button
-                    onClick={() => speakJapanese(s.ja)}
+                    onClick={() => speakJapanese(s.ja, s.kana)}
                     className="flex items-center gap-1 rounded-md border border-stone-200 bg-white px-2 py-0.5 text-[11px] text-stone-600 hover:bg-stone-100 hover:text-amber-800 transition-colors shrink-0"
+                    title="বাক্যের সঠিক জাপানি উচ্চারণ শুনুন"
                   >
                     <Volume2 className="h-3 w-3" />
                     <span>শুনুন</span>

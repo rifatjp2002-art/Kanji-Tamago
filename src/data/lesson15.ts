@@ -963,6 +963,7 @@ export const lesson15: Lesson = {
       sentences: [
         {
           ja: '私は月曜日から金曜日まで、地下鉄で会社に通っています。',
+          kana: 'わたしはげつようびからきんようびまで、ちかてつでかいしゃにかよっています。',
           romaji: 'Watashi wa getsuyoubi kara kinyoubi made, chikatetsu de kaisha ni kayotte imasu.',
           meaningEn: 'From Monday to Friday, I commute to my office by subway.',
           meaningBn: 'আমি সোম থেকে শুক্রবার পর্যন্ত পাতালরেলে চড়ে অফিসে যাতায়াত করি।'

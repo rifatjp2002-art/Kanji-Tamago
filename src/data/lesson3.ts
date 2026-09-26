@@ -85,18 +85,21 @@ export const lesson3: Lesson = {
       sentences: [
         {
           ja: '月曜日の朝にミーティングがあります。',
+          kana: 'げつようびのあさにミーティングがあります。',
           romaji: 'Getsuyoubi no asa ni miitingu ga arimasu.',
           meaningEn: 'There is a meeting on Monday morning.',
           meaningBn: 'সোমবার সকালে একটি মিটিং আছে।'
         },
         {
-          ja: '来月の五日に日本へ来ました。',
+          ja: '来月の五日に日本へ行きます。',
+          kana: 'らいげつのいつかににほんへいきます。',
           romaji: 'Raigetsu no itsuka ni Nihon e ikimasu.',
           meaningEn: 'I will go to Japan on the 5th of next month.',
           meaningBn: 'আগামী মাসের ৫ তারিখে আমি জাপান যাব।'
         },
         {
           ja: '今夜は月がとてもきれいです。',
+          kana: 'こんやはつきがとてもきれいです。',
           romaji: 'Konya wa tsuki ga totemo kirei desu.',
           meaningEn: 'The moon is very beautiful tonight.',
           meaningBn: 'আজ রাতে চাঁদটি ভীষণ সুন্দর।'
@@ -665,18 +668,21 @@ export const lesson3: Lesson = {
       sentences: [
         {
           ja: '今日は何曜日ですか。ー木曜日です。',
+          kana: 'きょうはなんようびですか。ーもくようびです。',
           romaji: 'Kyou wa nanyoubi desu ka. - Mokuyoubi desu.',
           meaningEn: 'What day is it today? - It is Thursday.',
           meaningBn: 'আজ কী বার? — আজ বৃহস্পতিবার।'
         },
         {
           ja: 'ゴミの日は曜日によって違います。',
+          kana: 'ごみのひはようびによってちがいます。',
           romaji: 'Gomi no hi wa youbi ni yotte chigaimasu.',
           meaningEn: 'Garbage collection days differ depending on the day of the week.',
           meaningBn: 'আবর্জনা ফেলার দিন সপ্তাহের বার অনুযায়ী পরিবর্তিত হয়।'
         },
         {
           ja: '日曜日にアルバイトをします。',
+          kana: 'にちようびにあるばいとをします。',
           romaji: 'Nichiyoubi ni arubaito o shimasu.',
           meaningEn: 'I work a part-time job on Sunday.',
           meaningBn: 'রবিবারে আমি পার্টটাইম চাকরি (আরুবাইতো) করি।'

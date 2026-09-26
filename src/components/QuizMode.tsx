@@ -49,9 +49,11 @@ export const QuizMode: React.FC = () => {
   const [selectedMastery, setSelectedMastery] = useState<MasteryLevel | 'all' | 'mistakes'>('all');
   const [selectedMode, setSelectedMode] = useState<QuestionMode>('all');
   const [selectedCount, setSelectedCount] = useState<number | 'all'>(20);
+  const [selectedTimer, setSelectedTimer] = useState<number>(0); // 0 = off, 15, 30 seconds
 
   // In-Quiz Real-Time Toggles
   const [showRomajiHint, setShowRomajiHint] = useState<boolean>(true);
+  const [timeLeft, setTimeLeft] = useState<number>(0);
 
   // Active Quiz State
   const [questions, setQuestions] = useState<GeneratedQuestion[]>([]);
@@ -159,6 +161,57 @@ export const QuizMode: React.FC = () => {
 
   const currentQ = questions[currentIndex];
 
+  // Timer countdown hook for timed challenges
+  useEffect(() => {
+    if (isConfiguring || isFinished || selectedTimer <= 0) return;
+    if (isAnswered) return;
+
+    setTimeLeft(selectedTimer);
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          handleTimeout();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [currentIndex, isConfiguring, isFinished, isAnswered, selectedTimer]);
+
+  // Handle timeout when countdown reaches 0
+  const handleTimeout = () => {
+    if (isAnswered || !currentQ) return;
+
+    setSelectedOption(-1); // -1 indicates timed out
+    setIsAnswered(true);
+
+    setUserAnswers((prev) => [
+      ...prev,
+      {
+        question: currentQ,
+        selectedIndex: -1,
+        isCorrect: false,
+      },
+    ]);
+
+    if (currentQ.kanjiId) {
+      recordMistake(currentQ.kanjiId);
+      setMistakeCount((prev) => prev + 1);
+    }
+
+    showToast('⏰ সময় শেষ হয়ে গেছে! সঠিক উত্তরটি নিচে সবুজ রঙে দেখে নিন।');
+  };
+
+  // Clear persistent mistakes bank
+  const handleClearMistakes = () => {
+    clearAllMistakes();
+    setMistakeCount(0);
+    showToast('🧹 ভুল কাঞ্জি ব্যাংক সফলভাবে খালি করা হয়েছে!');
+  };
+
   // Handle user selecting an option
   const handleSelectOption = (index: number) => {
     if (isAnswered || !currentQ) return;
@@ -181,12 +234,16 @@ export const QuizMode: React.FC = () => {
 
     // Track mistakes in persistent storage
     if (currentQ.kanjiId) {
+      const wasMistake = getStoredMistakes().includes(currentQ.kanjiId);
       if (!isCorrect) {
         recordMistake(currentQ.kanjiId);
         setMistakeCount((prev) => prev + 1);
       } else {
         removeMistake(currentQ.kanjiId);
         setMistakeCount((prev) => Math.max(0, prev - 1));
+        if (wasMistake) {
+          showToast('🎉 চমৎকার! ভুল শুধরে নিয়েছেন—কাঞ্জিটি ভুল ব্যাংক থেকে মুছে দেওয়া হয়েছে।');
+        }
       }
     }
 
@@ -292,9 +349,9 @@ export const QuizMode: React.FC = () => {
   const estimatedPoolCount = getEstimatedPoolSize(selectedLesson, selectedMode);
   const isKanjiOptionType =
     currentQ &&
-    ['kana_to_kanji', 'onyomi_to_kanji', 'kunyomi_to_kanji', 'meaning_to_kanji'].includes(
+    (['kana_to_kanji', 'onyomi_to_kanji', 'kunyomi_to_kanji', 'meaning_to_kanji'].includes(
       currentQ.questionType
-    );
+    ) || (currentQ.questionType === 'jlpt_exam' && currentQ.options[0]?.text.length <= 2 && !/[\u3040-\u309F]/.test(currentQ.options[0]?.text)));
 
   const isCurrentKanjiHard = currentQ?.kanjiId ? !!hardKanjiIds[currentQ.kanjiId] : false;
 
@@ -319,7 +376,7 @@ export const QuizMode: React.FC = () => {
                 <span>🎯 কাঞ্জি কুইজ স্টুডিও</span>
               </h1>
               <p className="mt-2 text-sm text-stone-300 max-w-2xl leading-relaxed font-sans">
-                কাঞ্জি ➔ কানা, কানা ➔ কাঞ্জি, অন'ইয়োমি, কুন'ইয়োমি ও অর্থের খাঁটি ৪-অপশন কুইজ। রোমাজি টগল এবং কঠিন কাঞ্জি সেভ করার পূর্ণাঙ্গ সুবিধা।
+                কাঞ্জি ➔ কানা, কানা ➔ কাঞ্জি, অন'ইয়োমি, কুন'ইয়োমি, JLPT রিয়েল এক্সাম ও টাইমার মোড। রোমাজি টগল এবং কঠিন কাঞ্জি সেভ করার পূর্ণাঙ্গ সুবিধা।
               </p>
             </div>
 
@@ -334,16 +391,25 @@ export const QuizMode: React.FC = () => {
               </div>
 
               {mistakeCount > 0 && (
-                <button
-                  onClick={handleStartMistakesQuiz}
-                  className="bg-rose-950/70 hover:bg-rose-900/80 backdrop-blur-md rounded-2xl px-4 py-2 border border-rose-800/60 flex items-center gap-2.5 text-left transition-all group shadow-sm"
-                >
-                  <AlertTriangle className="h-4 w-4 text-rose-400 group-hover:scale-110 transition-transform" />
-                  <div>
-                    <div className="text-[10px] text-rose-300 font-medium">ভুল হওয়া কাঞ্জি ব্যাংক</div>
-                    <div className="font-bold text-rose-200 text-sm">{mistakeCount} টি কাঞ্জি রিটেক করুন ➔</div>
-                  </div>
-                </button>
+                <div className="flex items-center gap-1.5 w-full">
+                  <button
+                    onClick={handleStartMistakesQuiz}
+                    className="bg-rose-950/70 hover:bg-rose-900/80 backdrop-blur-md rounded-2xl px-3.5 py-2 border border-rose-800/60 flex items-center gap-2 text-left transition-all group shadow-sm flex-1"
+                  >
+                    <AlertTriangle className="h-4 w-4 text-rose-400 group-hover:scale-110 transition-transform shrink-0" />
+                    <div>
+                      <div className="text-[10px] text-rose-300 font-medium">ভুল হওয়া কাঞ্জি ব্যাংক</div>
+                      <div className="font-bold text-rose-200 text-xs sm:text-sm">{mistakeCount} টি রিটেক করুন ➔</div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={handleClearMistakes}
+                    className="p-2.5 rounded-2xl bg-[#181b24] border border-stone-800 text-stone-400 hover:text-rose-400 hover:border-rose-800/60 transition-colors text-xs"
+                    title="ভুল তালিকা রিসেট / খালি করুন"
+                  >
+                    🗑️
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -536,6 +602,12 @@ export const QuizMode: React.FC = () => {
                   title: '🏪 বাস্তব সাইনবোর্ড ও সিচুয়েশন',
                   desc: 'সুপারমার্কেট, স্টেশন ও জরুরি সাইনবোর্ড সংক্রান্ত কুইজ',
                 },
+                {
+                  id: 'jlpt_exam',
+                  title: '🎌 JLPT রিয়েল এক্সাম মোড (N5-N3)',
+                  desc: 'আসল পরীক্ষার অনুকরণে 漢字読み ও 表記 ফরম্যাটে বাক্যভিত্তিক প্রশ্ন',
+                  badge: 'JLPT স্টাইল',
+                },
               ].map((m) => (
                 <button
                   key={m.id}
@@ -584,6 +656,38 @@ export const QuizMode: React.FC = () => {
                   }`}
                 >
                   {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 5. Speed & Timer Options */}
+          <div>
+            <div className="flex items-center justify-between mb-2.5">
+              <label className="text-xs font-bold text-stone-400 uppercase tracking-wider">
+                ৫. স্পিড ও টাইমার চ্যালেঞ্জ (Countdown Timer)
+              </label>
+              <span className="text-[11px] text-amber-300 font-semibold bg-amber-950/60 px-2 py-0.5 rounded-lg border border-amber-800/50">
+                {selectedTimer === 0 ? '🧘 আনলিমিটেড সময়' : `⏱️ ${selectedTimer} সেকেন্ড লিমিট`}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              {[
+                { val: 0, label: '🧘 টাইমার নেই (Relaxed)', desc: 'যতক্ষণ ইচ্ছা ভেবেচিন্তে শান্তভাবে উত্তর দিন' },
+                { val: 15, label: '⚡ ১৫ সেকেন্ড (Speed Round)', desc: 'তাত্ক্ষণিক সিদ্ধান্ত ও রিফ্লেক্স বাড়ানোর স্পিড টেস্ট' },
+                { val: 30, label: '⏱️ ৩০ সেকেন্ড (JLPT Pace)', desc: 'আসল জেএলপিটি পরীক্ষার স্ট্যান্ডার্ড টাইম ম্যানেজমেন্ট' },
+              ].map((t) => (
+                <button
+                  key={t.val}
+                  onClick={() => setSelectedTimer(t.val)}
+                  className={`p-3.5 rounded-2xl text-left border transition-all ${
+                    selectedTimer === t.val
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500 shadow-sm ring-1 ring-amber-500/30'
+                      : 'bg-[#181b24] text-stone-400 border-stone-800 hover:bg-stone-800 hover:text-stone-200'
+                  }`}
+                >
+                  <div className="text-xs font-bold text-stone-200">{t.label}</div>
+                  <div className="text-[11px] text-stone-400 mt-0.5">{t.desc}</div>
                 </button>
               ))}
             </div>
@@ -884,6 +988,17 @@ export const QuizMode: React.FC = () => {
 
         {/* Live Quiz Helper Toggles */}
         <div className="flex items-center gap-2">
+          {/* Live Countdown Timer Badge */}
+          {selectedTimer > 0 && (
+            <div className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold border transition-colors ${
+              timeLeft <= 5 && !isAnswered
+                ? 'bg-rose-950/80 border-rose-500 text-rose-300 animate-pulse'
+                : 'bg-[#181b24] border-stone-800 text-amber-300'
+            }`}>
+              <span>⏱️ {timeLeft}s</span>
+            </div>
+          )}
+
           {/* Romaji Hint Toggle */}
           <button
             onClick={() => setShowRomajiHint((prev) => !prev)}
@@ -919,6 +1034,22 @@ export const QuizMode: React.FC = () => {
         />
       </div>
 
+      {/* Live Countdown Timer Progress Bar */}
+      {selectedTimer > 0 && (
+        <div className="h-1.5 w-full bg-stone-800/80 rounded-full overflow-hidden -mt-2">
+          <div
+            className={`h-full transition-all duration-1000 ease-linear rounded-full ${
+              timeLeft > selectedTimer * 0.5
+                ? 'bg-emerald-500'
+                : timeLeft > 5
+                ? 'bg-amber-500'
+                : 'bg-rose-500 animate-pulse'
+            }`}
+            style={{ width: `${Math.max(0, (timeLeft / selectedTimer) * 100)}%` }}
+          />
+        </div>
+      )}
+
       {/* Main Question Card */}
       <div className="rounded-3xl border border-stone-800 bg-[#14171d] p-5 sm:p-7 shadow-xl">
         {/* Question Category / Mode Tag */}
@@ -938,6 +1069,7 @@ export const QuizMode: React.FC = () => {
               {currentQ.questionType === 'sentences' && '✏️ বাস্তব বাক্য ও শূন্যস্থান পূরণ'}
               {currentQ.questionType === 'strokes' && '✍️ স্ট্রোক সংখ্যা ও বৈশিষ্ট্য'}
               {currentQ.questionType === 'scenario' && '🏪 বাস্তব সাইনবোর্ড ও সিচুয়েশন'}
+              {currentQ.questionType === 'jlpt_exam' && '🎌 JLPT রিয়েল এক্সাম ফরম্যাট (N5-N3)'}
             </span>
           </div>
 
@@ -980,6 +1112,13 @@ export const QuizMode: React.FC = () => {
                 <span>উচ্চারণ</span>
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Timeout Notification Banner */}
+        {isAnswered && selectedOption === -1 && (
+          <div className="mt-4 rounded-2xl bg-rose-950/60 border border-rose-800/60 p-3 text-xs text-rose-300 font-bold flex items-center gap-2 animate-fadeIn">
+            <span>⏰ সময় পার হয়ে গেছে! সঠিক উত্তরটি নিচে সবুজ রঙে চিহ্নিত করা হয়েছে।</span>
           </div>
         )}
 

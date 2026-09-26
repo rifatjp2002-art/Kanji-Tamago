@@ -388,9 +388,9 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          speakJapanese(s.ja);
+                          speakJapanese(s.ja, s.kana);
                         }}
-                        title="বাক্যের অডিও শুনুন"
+                        title="বাক্যের সঠিক জাপানি অডিও শুনুন"
                         className="rounded-lg p-1.5 bg-stone-800 hover:bg-stone-700 text-amber-300 border border-stone-700 transition-all shrink-0"
                       >
                         <Volume2 className="h-4 w-4" />

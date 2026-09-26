@@ -14,6 +14,7 @@ import {
   FileCode2
 } from 'lucide-react';
 import { DisplayToggles } from '../types/kanji';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface SettingsModalProps {
   toggles: DisplayToggles;
@@ -388,6 +389,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </span>
               </button>
             </div>
+          </div>
+
+          {/* PWA Mobile App Installation Section */}
+          <div className="rounded-2xl border border-stone-800 bg-[#161a22] p-4">
+            <h4 className="text-xs font-bold text-stone-200 mb-2.5 flex items-center gap-2">
+              <span>📱</span>
+              <span>মোবাইল ও পিসি অ্যাপ ইনস্টল (Offline PWA)</span>
+            </h4>
+            <PWAInstallButton variant="settings" />
           </div>
 
           {/* Advanced / Safe Data Export Section */}

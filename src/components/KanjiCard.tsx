@@ -300,8 +300,8 @@ export const KanjiCard: React.FC<KanjiCardProps> = ({
                   {/* Big Clear Sound Button */}
                   <button
                     type="button"
-                    onClick={(e) => handleAudioPlay(e, s.ja)}
-                    title="বাক্যের অডিও শুনুন"
+                    onClick={(e) => handleAudioPlay(e, s.ja, s.kana)}
+                    title="বাক্যের সঠিক জাপানি অডিও শুনুন"
                     className="rounded-xl p-2 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition-all shrink-0 active:scale-95 shadow-2xs"
                   >
                     <Volume2 className="h-5 w-5" />
