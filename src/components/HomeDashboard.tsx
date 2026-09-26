@@ -91,7 +91,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         <div className="relative z-10 max-w-3xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/40 bg-amber-500/10 px-3.5 py-1 text-xs font-semibold text-amber-300 mb-4 backdrop-blur-md">
             <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-            <span>জাপানি ভাষা পাঠ্যক্রম · A1-A2 (JLPT N5-N4)</span>
+            <span>জাপানি ভাষা পাঠ্যক্রম · A1-B1 (JLPT N5-N3)</span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-white tracking-tight leading-tight">

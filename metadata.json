@@ -1,6 +1,6 @@
 {
-  "name": "Kanji Tamago (漢字たまご) - Modular JLPT Deck",
-  "description": "Modular Kanji learning system based on Kanji Tamago (A1-A2) with customizable bilingual Bengali-English toggles, JLPT vocabulary, and daily Japanese sentences.",
+  "name": "Kanji Tamago A1-B1 (漢字たまご)",
+  "description": "Bilingual Japanese Kanji learning deck for A1-B1 (N5-N3) with Bengali story-based mnemonics and native Text-to-Speech.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

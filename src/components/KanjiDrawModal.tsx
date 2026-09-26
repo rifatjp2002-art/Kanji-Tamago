@@ -34,9 +34,19 @@ export const KanjiDrawModal: React.FC<KanjiDrawModalProps> = ({
   const [isDrawing, setIsDrawing] = useState(false);
   const [showGuide, setShowGuide] = useState(true);
   const [strokeHistory, setStrokeHistory] = useState<ImageData[]>([]);
-  const [brushColor, setBrushColor] = useState('#f8fafc'); // White chalk/sumi
+  const [boardMode, setBoardMode] = useState<'slate' | 'paper'>('slate');
+  const [brushColor, setBrushColor] = useState('#fbbf24'); // Default Gold on dark slate
   const [brushSize, setBrushSize] = useState(8);
   const [isAnimatingStroke, setIsAnimatingStroke] = useState(false);
+
+  // Synchronize default brush color when toggling board mode
+  useEffect(() => {
+    if (boardMode === 'slate') {
+      setBrushColor('#fbbf24'); // Gold on slate
+    } else {
+      setBrushColor('#1c1917'); // Sumi-e Black on paper
+    }
+  }, [boardMode]);
 
   // Find index for prev/next
   const currentIndex = itemsList.findIndex((k) => k.id === item?.id);
@@ -76,7 +86,7 @@ export const KanjiDrawModal: React.FC<KanjiDrawModalProps> = ({
 
     // Initial clear
     clearCanvas();
-  }, [item]);
+  }, [item, boardMode]);
 
   if (!item) return null;
 
@@ -152,6 +162,13 @@ export const KanjiDrawModal: React.FC<KanjiDrawModalProps> = ({
     ctx.lineWidth = brushSize;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
+    if (boardMode === 'slate') {
+      ctx.shadowColor = brushColor;
+      ctx.shadowBlur = brushSize / 2.5; // glowing chalk on slate
+    } else {
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0; // crisp solid sumi ink on paper
+    }
   };
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
@@ -254,24 +271,36 @@ export const KanjiDrawModal: React.FC<KanjiDrawModalProps> = ({
             {/* Left Column: Big Kanji Display & Writing Studio Canvas (7 cols) */}
             <div className="lg:col-span-7 flex flex-col items-center">
               {/* Studio Canvas Box with Japanese Grid Guidelines */}
-              <div className="relative w-full max-w-[280px] xs:max-w-[320px] sm:max-w-[350px] aspect-square rounded-2xl border-2 border-amber-500/40 bg-[#0d0f14] shadow-2xl overflow-hidden select-none touch-none">
-                {/* Traditional Japanese Calligraphy Grid Guidelines (十字 crosshair) */}
-                <div className="absolute inset-0 pointer-events-none opacity-30">
+              <div className={`relative w-full max-w-[280px] xs:max-w-[320px] sm:max-w-[350px] aspect-square rounded-3xl border-2 transition-all duration-300 overflow-hidden select-none touch-none ${
+                boardMode === 'slate'
+                  ? 'border-amber-500/60 bg-gradient-to-b from-[#11141e] to-[#07090e] ring-4 ring-amber-500/15 shadow-[0_0_35px_rgba(245,158,11,0.2)]'
+                  : 'border-amber-600/40 bg-[#fbf9f3] ring-4 ring-amber-600/5 shadow-[0_4px_24px_rgba(139,92,26,0.08)]'
+              }`}>
+                {/* Traditional Japanese Calligraphy Grid Guidelines (Clean & Unobtrusive) */}
+                <div className="absolute inset-0 pointer-events-none opacity-40">
                   {/* Horizontal Center Line */}
-                  <div className="absolute top-1/2 left-0 right-0 h-px border-t-2 border-dashed border-amber-500/60" />
+                  <div className={`absolute top-1/2 left-0 right-0 h-px border-t-2 border-dashed ${
+                    boardMode === 'slate' ? 'border-amber-500/20' : 'border-stone-400/35'
+                  }`} />
                   {/* Vertical Center Line */}
-                  <div className="absolute left-1/2 top-0 bottom-0 w-px border-l-2 border-dashed border-amber-500/60" />
+                  <div className={`absolute left-1/2 top-0 bottom-0 w-px border-l-2 border-dashed ${
+                    boardMode === 'slate' ? 'border-amber-500/20' : 'border-stone-400/35'
+                  }`} />
                   {/* Inner guide box */}
-                  <div className="absolute inset-6 border border-dashed border-amber-400/30 rounded-lg" />
+                  <div className={`absolute inset-6 border border-dashed rounded-2xl ${
+                    boardMode === 'slate' ? 'border-amber-500/10' : 'border-stone-400/15'
+                  }`} />
                 </div>
 
-                {/* Ghost Outline Guide */}
+                {/* High-Contrast Ghost Outline Guide */}
                 {showGuide && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none px-4">
                     <span
-                      className={`font-serif font-bold text-stone-600/30 transition-all duration-300 leading-none text-center select-none ${getGuideFontSize(
-                        item.kanji
-                      )} ${isAnimatingStroke ? 'scale-105 text-amber-400/50 animate-pulse' : ''}`}
+                      className={`font-serif font-bold transition-all duration-300 leading-none text-center select-none ${
+                        boardMode === 'slate'
+                          ? `text-stone-200/30 filter drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)] ${isAnimatingStroke ? 'scale-105 text-amber-300/50 animate-pulse' : ''}`
+                          : `text-stone-500/25 ${isAnimatingStroke ? 'scale-105 text-amber-700/40 animate-pulse' : ''}`
+                      } ${getGuideFontSize(item.kanji)}`}
                     >
                       {item.kanji}
                     </span>
@@ -292,20 +321,33 @@ export const KanjiDrawModal: React.FC<KanjiDrawModalProps> = ({
                 />
 
                 {/* Status indicator */}
-                <div className="absolute bottom-2 left-3 text-[10px] text-stone-500 font-medium pointer-events-none">
-                  {showGuide ? '✍️ ট্রেসিং গাইড চালু' : '📝 ফ্রি-হ্যান্ড প্র্যাকটিস মোড'}
+                <div className={`absolute bottom-2.5 left-3.5 text-[10px] font-semibold backdrop-blur-md px-2 py-0.5 rounded-md border pointer-events-none transition-colors duration-300 ${
+                  boardMode === 'slate'
+                    ? 'text-stone-300 bg-[#11141a]/80 border-stone-800/50'
+                    : 'text-stone-600 bg-white/80 border-stone-300/50'
+                }`}>
+                  {showGuide ? '✍️ ট্রেসিং গাইড চালু' : '📝 ফ্রি-হ্যান্ড প্র্যাকটিস'}
                 </div>
               </div>
 
               {/* Canvas Controls Toolbar */}
-              <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2 w-full max-w-[350px]">
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-2 w-full max-w-[350px]">
+                {/* Board Mode Toggle */}
+                <button
+                  onClick={() => setBoardMode(boardMode === 'slate' ? 'paper' : 'slate')}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#1c2130]/90 border border-stone-800 text-stone-200 hover:bg-[#252c3d] shadow-md active:scale-95 transition-all"
+                  title="বোর্ড ব্যাকগ্রাউন্ড পরিবর্তন করুন (ডিপ শ্লেট বা সাদা কাগজ)"
+                >
+                  <span>{boardMode === 'slate' ? '📜 কাগজ মোড' : '🎴 শ্লেট মোড'}</span>
+                </button>
+
                 {/* Guide Toggle */}
                 <button
                   onClick={() => setShowGuide(!showGuide)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-md active:scale-95 border ${
                     showGuide
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50'
-                      : 'bg-stone-800 text-stone-400 hover:bg-stone-700'
+                      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40 shadow-emerald-950/20'
+                      : 'bg-stone-800/80 text-stone-400 border-stone-700 hover:bg-stone-700'
                   }`}
                   title="কাঞ্জি ব্যাকড্রপ ট্রেসিং গাইড অন/অফ করুন"
                 >
@@ -316,10 +358,10 @@ export const KanjiDrawModal: React.FC<KanjiDrawModalProps> = ({
                 {/* Audio Button */}
                 <button
                   onClick={handleSimulateStrokeOrder}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#181b24] border border-stone-800 text-stone-200 hover:bg-stone-800 shadow-sm active:scale-95 transition-all"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 shadow-md active:scale-95 transition-all"
                   title={`উচ্চারণ শুনুন (${primaryReading})`}
                 >
-                  <Volume2 className="h-3.5 w-3.5 text-amber-400" />
+                  <Volume2 className="h-3.5 w-3.5" />
                   <span>উচ্চারণ</span>
                 </button>
 
@@ -327,7 +369,7 @@ export const KanjiDrawModal: React.FC<KanjiDrawModalProps> = ({
                 <button
                   onClick={undoLastStroke}
                   disabled={strokeHistory.length === 0}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#181b24] border border-stone-800 text-stone-300 hover:bg-stone-800 disabled:opacity-40 shadow-sm transition-all"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#1c2130]/90 border border-stone-800 text-stone-200 hover:bg-[#252c3d] disabled:opacity-30 shadow-md active:scale-95 transition-all"
                   title="আগের স্ট্রোক ফিরিয়ে আনুন"
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
@@ -337,7 +379,7 @@ export const KanjiDrawModal: React.FC<KanjiDrawModalProps> = ({
                 {/* Clear Canvas */}
                 <button
                   onClick={clearCanvas}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-950/40 border border-rose-800/50 text-rose-300 hover:bg-rose-900/60 shadow-sm transition-all"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-red-500/10 border border-red-500/30 text-red-300 hover:bg-red-500/20 shadow-md active:scale-95 transition-all"
                   title="ক্যানভাস সম্পূর্ণ মুছে ফেলুন"
                 >
                   <Eraser className="h-3.5 w-3.5" />
@@ -346,50 +388,66 @@ export const KanjiDrawModal: React.FC<KanjiDrawModalProps> = ({
               </div>
 
               {/* Ink Color & Brush Thickness Controls */}
-              <div className="mt-3 flex items-center justify-between gap-4 w-full max-w-[350px] px-1 text-xs text-stone-400">
-                {/* Color choices */}
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] text-stone-500">কালি:</span>
-                  {[
-                    { label: 'সাদা চুন (Chalk)', color: '#f8fafc' },
-                    { label: 'লাল (Aka)', color: '#f43f5e' },
-                    { label: 'সোনালী (Kin)', color: '#fbbf24' },
-                    { label: 'নীল (Ao)', color: '#38bdf8' },
-                  ].map((c) => (
-                    <button
-                      key={c.color}
-                      onClick={() => setBrushColor(c.color)}
-                      style={{ backgroundColor: c.color }}
-                      className={`h-5 w-5 rounded-full transition-transform ${
-                        brushColor === c.color
-                          ? 'ring-2 ring-amber-400 ring-offset-2 ring-offset-[#12151b] scale-110'
-                          : 'opacity-70 hover:opacity-100'
-                      }`}
-                      title={c.label}
-                    />
-                  ))}
-                </div>
+              <div className={`mt-3.5 flex flex-col gap-2.5 w-full max-w-[350px] p-3 rounded-2xl shadow-inner transition-colors duration-300 ${
+                boardMode === 'slate' ? 'bg-[#141822]/90 border border-[#212735]' : 'bg-stone-100 border border-stone-200'
+              }`}>
+                <div className="flex items-center justify-between text-xs text-stone-400">
+                  {/* Color choices */}
+                  <div className="flex items-center gap-1.5">
+                    <span className={`text-[11px] font-semibold ${boardMode === 'slate' ? 'text-stone-400' : 'text-stone-500'}`}>কালি:</span>
+                    <div className="flex items-center gap-2">
+                      {(boardMode === 'slate'
+                        ? [
+                            { label: 'সোনালী (Gold)', color: '#fbbf24' },
+                            { label: 'সাদা চক (White)', color: '#f8fafc' },
+                          ]
+                        : [
+                            { label: 'কালো কালি (Sumi)', color: '#1c1917' },
+                            { label: 'লাল কালি (Shu)', color: '#ef4444' },
+                          ]
+                      ).map((c) => (
+                        <button
+                          key={c.color}
+                          onClick={() => setBrushColor(c.color)}
+                          style={{ backgroundColor: c.color }}
+                          className={`h-5 w-5 rounded-full transition-all duration-150 ${
+                            brushColor === c.color
+                              ? `ring-2 ring-amber-500 ring-offset-2 scale-120 shadow-md ${
+                                  boardMode === 'slate' ? 'ring-offset-[#141822]' : 'ring-offset-stone-100'
+                                }`
+                              : 'opacity-75 hover:opacity-100 hover:scale-110'
+                          }`}
+                          title={c.label}
+                        />
+                      ))}
+                    </div>
+                  </div>
 
-                {/* Brush size */}
-                <div className="flex items-center gap-1">
-                  <span className="text-[11px] text-stone-500">তুলি:</span>
-                  {[
-                    { label: 'পাতলা', size: 5 },
-                    { label: 'মাঝারি', size: 8 },
-                    { label: 'মোটা', size: 14 },
-                  ].map((b) => (
-                    <button
-                      key={b.size}
-                      onClick={() => setBrushSize(b.size)}
-                      className={`px-2 py-0.5 text-[10px] font-semibold rounded-md border transition-all ${
-                        brushSize === b.size
-                          ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold'
-                          : 'bg-[#181b24] border-stone-800 text-stone-400 hover:bg-stone-800'
-                      }`}
-                    >
-                      {b.label}
-                    </button>
-                  ))}
+                  {/* Brush size */}
+                  <div className="flex items-center gap-1.5">
+                    <span className={`text-[11px] font-semibold ${boardMode === 'slate' ? 'text-stone-400' : 'text-stone-500'}`}>তুলি:</span>
+                    <div className="flex items-center gap-1">
+                      {[
+                        { label: 'পাতলা', size: 5 },
+                        { label: 'মাঝারি', size: 8 },
+                        { label: 'মোটা', size: 14 },
+                      ].map((b) => (
+                        <button
+                          key={b.size}
+                          onClick={() => setBrushSize(b.size)}
+                          className={`px-2.5 py-0.5 text-[10px] font-semibold rounded-lg border transition-all ${
+                            brushSize === b.size
+                              ? 'bg-amber-500/15 border-amber-500/50 text-amber-300 font-bold shadow-sm'
+                              : boardMode === 'slate'
+                                ? 'bg-[#1a1f2c] border-[#2c3345] text-stone-400 hover:bg-[#252c3d]'
+                                : 'bg-white border-stone-300 text-stone-600 hover:bg-stone-50'
+                          }`}
+                        >
+                          {b.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

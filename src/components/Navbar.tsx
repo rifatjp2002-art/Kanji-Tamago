@@ -1,5 +1,6 @@
 import React from 'react';
 import { Home, BookOpen, RotateCw, Flame, Download, Settings } from 'lucide-react';
+import { PWAInstallButton } from './PWAInstallButton';
 
 export type MainTabType = 'home' | 'lessons' | 'flashcards' | 'quiz';
 
@@ -30,7 +31,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="flex flex-col">
               <span className="leading-none text-sm sm:text-base tracking-wide text-white">Kanji Tamago</span>
               <span className="text-[9px] sm:text-[10px] font-normal text-amber-400/90 font-sans tracking-normal mt-0.5">
-                漢字たまご · A1-A2
+                漢字たまご · A1-B1
               </span>
             </div>
           </button>
@@ -88,6 +89,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right utility buttons: Settings */}
           <div className="flex items-center gap-1.5 sm:gap-2">
+            <PWAInstallButton />
             <button
               onClick={onOpenSettings}
               className="flex items-center gap-1.5 rounded-xl border border-[#2b3140] bg-[#161a22] px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold text-stone-200 shadow-xs hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-300 transition-all"

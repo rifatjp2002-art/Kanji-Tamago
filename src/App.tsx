@@ -3,6 +3,7 @@ import { allLessons, defaultToggles } from './data/allLessons';
 import { lessonContextGuides } from './data/lessonContextGuides';
 import { KanjiItem, DisplayToggles, KanjiCategory } from './types/kanji';
 import { Navbar, MainTabType } from './components/Navbar';
+import { OfflineIndicator } from './components/OfflineIndicator';
 import { HomeDashboard } from './components/HomeDashboard';
 import { KanjiCard } from './components/KanjiCard';
 import { KanjiDrawModal } from './components/KanjiDrawModal';
@@ -520,6 +521,9 @@ export default function App() {
           onClose={() => setIsExportOpen(false)}
         />
       )}
+
+      {/* Connectivity Banner Indicator */}
+      <OfflineIndicator />
     </div>
   );
 }

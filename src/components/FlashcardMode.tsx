@@ -37,18 +37,11 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
 
   const currentItem = items[currentIndex];
 
-  if (!currentItem) {
-    return (
-      <div className="rounded-2xl border border-stone-800 bg-[#14171c] p-12 text-center max-w-md mx-auto text-stone-400">
-        <p>কোনো কাঞ্জি পাওয়া যায়নি।</p>
-      </div>
-    );
-  }
-
-  const primaryReading =
-    currentItem.readings.kunyomi[0]?.kana ||
-    currentItem.readings.onyomi[0]?.kana ||
-    currentItem.kanji;
+  const primaryReading = currentItem
+    ? currentItem.readings.kunyomi[0]?.kana ||
+      currentItem.readings.onyomi[0]?.kana ||
+      currentItem.kanji
+    : '';
 
   const handleNext = () => {
     setIsFlipped(false);
@@ -64,6 +57,82 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
     setKanjiMastery(currentItem.id, level);
     handleNext();
   };
+
+  // Global keyboard listeners for lightning-fast study on laptops & keyboard tablets
+  useEffect(() => {
+    if (!currentItem) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Avoid firing when user is typing in general text inputs
+      const activeEl = document.activeElement;
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+        return;
+      }
+
+      switch (e.key) {
+        case ' ': // Spacebar
+        case 'Enter':
+          e.preventDefault();
+          setIsFlipped((prev) => !prev);
+          break;
+        case 'ArrowRight':
+        case 'ArrowDown':
+          e.preventDefault();
+          handleNext();
+          break;
+        case 'ArrowLeft':
+        case 'ArrowUp':
+          e.preventDefault();
+          handlePrev();
+          break;
+        case '1': // Rate Hard
+          if (isFlipped) {
+            e.preventDefault();
+            handleRate('hard');
+          }
+          break;
+        case '2': // Rate Medium
+          if (isFlipped) {
+            e.preventDefault();
+            handleRate('medium');
+          }
+          break;
+        case '3': // Rate Easy
+          if (isFlipped) {
+            e.preventDefault();
+            handleRate('easy');
+          }
+          break;
+        case 'v':
+        case 'V':
+          e.preventDefault();
+          speakJapanese(currentItem.kanji, primaryReading);
+          break;
+        case 'd':
+        case 'D':
+          if (onSelectKanjiDetail) {
+            e.preventDefault();
+            onSelectKanjiDetail(currentItem);
+          }
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [currentIndex, isFlipped, currentItem, onSelectKanjiDetail, primaryReading]);
+
+  if (!currentItem) {
+    return (
+      <div className="rounded-2xl border border-stone-800 bg-[#14171c] p-12 text-center max-w-md mx-auto text-stone-400">
+        <p>কোনো কাঞ্জি পাওয়া যায়নি।</p>
+      </div>
+    );
+  }
 
   const progress = getProgress();
   const currentStatus = progress.kanjiStatus[currentItem.id];
@@ -402,6 +471,25 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
           <span>পরবর্তী</span>
           <ArrowRight className="h-3.5 w-3.5" />
         </button>
+      </div>
+
+      {/* Quiet Minimalist Keyboard Shortcuts Hint */}
+      <div className="mt-5 text-center text-[10px] text-stone-500 font-sans flex flex-wrap items-center justify-center gap-1.5 border-t border-stone-800/40 pt-3 select-none">
+        <span>⌨️ কীবোর্ড শর্টকাট:</span>
+        <span className="bg-[#1c202a] border border-stone-800 text-stone-400 px-1 py-0.5 rounded font-mono">Space/Enter</span>
+        <span>ফ্লিপ</span>
+        <span className="text-stone-700">·</span>
+        <span className="bg-[#1c202a] border border-stone-800 text-stone-400 px-1 py-0.5 rounded font-mono">← / →</span>
+        <span>কার্ড</span>
+        <span className="text-stone-700">·</span>
+        <span className="bg-[#1c202a] border border-stone-800 text-stone-400 px-1 py-0.5 rounded font-mono">১, ২, ৩</span>
+        <span>রেটিং</span>
+        <span className="text-stone-700">·</span>
+        <span className="bg-[#1c202a] border border-stone-800 text-stone-400 px-1 py-0.5 rounded font-mono">V</span>
+        <span>শুনুন</span>
+        <span className="text-stone-700">·</span>
+        <span className="bg-[#1c202a] border border-stone-800 text-stone-400 px-1 py-0.5 rounded font-mono">D</span>
+        <span>লিখুন</span>
       </div>
     </div>
   );

@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8F5E9" />
+      <stop offset="100%" stop-color="#C8E6C9" />
+    </linearGradient>
+    <!-- Egg Body Gradient -->
+    <linearGradient id="eggGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFF9C4" />
+      <stop offset="60%" stop-color="#FFF176" />
+      <stop offset="100%" stop-color="#FBC02D" />
+    </linearGradient>
+    <!-- Sprout Gradient -->
+    <linearGradient id="sproutGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A5D6A7" />
+      <stop offset="100%" stop-color="#4CAF50" />
+    </linearGradient>
+    <!-- Drop Shadow for Egg -->
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity="0.15" />
+    </filter>
+  </defs>
+
+  <!-- Background Card -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)" />
+
+  <!-- Safe Zone Border -->
+  <rect x="24" y="24" width="464" height="464" rx="104" fill="none" stroke="#FFFFFF" stroke-opacity="0.4" stroke-width="4" stroke-dasharray="12 8" />
+
+  <!-- Little Cute Sprout on Top of Egg -->
+  <g transform="translate(256, 110)">
+    <!-- Stem -->
+    <path d="M 0,30 Q -10,10 -5, -10 Q -2,-25 5,-35" fill="none" stroke="#388E3C" stroke-width="8" stroke-linecap="round" />
+    <!-- Leaf Left -->
+    <path d="M -2, -10 Q -25,-15 -20, 5 Q -10, 10 0, 5" fill="url(#sproutGrad)" stroke="#2E7D32" stroke-width="3" />
+    <!-- Leaf Right -->
+    <path d="M 3, -18 Q 28,-18 25, 2 Q 12, 5 0, 0" fill="url(#sproutGrad)" stroke="#2E7D32" stroke-width="3" />
+  </g>
+
+  <!-- Egg Shape (Tamago) -->
+  <path d="M 256, 150 
+           C 160, 150 140, 310 140, 370 
+           C 140, 420 190, 430 256, 430 
+           C 322, 430 372, 420 372, 370 
+           C 372, 310 352, 150 256, 150 Z" 
+        fill="url(#eggGrad)" 
+        filter="url(#shadow)" />
+
+  <!-- Blush Cheek Left -->
+  <ellipse cx="190" cy="350" rx="12" ry="7" fill="#FF8A80" opacity="0.6" />
+  <!-- Blush Cheek Right -->
+  <ellipse cx="322" cy="350" rx="12" ry="7" fill="#FF8A80" opacity="0.6" />
+
+  <!-- Cute Eyes -->
+  <circle cx="215" cy="325" r="7" fill="#37474F" />
+  <circle cx="297" cy="325" r="7" fill="#37474F" />
+
+  <!-- Cute Smile Mouth -->
+  <path d="M 246, 335 Q 256, 345 266, 335" fill="none" stroke="#37474F" stroke-width="5" stroke-linecap="round" />
+
+  <!-- Kanji '卵' (Egg) in the middle of egg -->
+  <text x="256" y="240" 
+        font-family="'Shippori Mincho', 'Noto Sans JP', 'Hiragino Mincho ProN', 'MS Mincho', serif" 
+        font-size="64" 
+        font-weight="bold" 
+        fill="#3E2723" 
+        text-anchor="middle" 
+        dominant-baseline="middle">
+    卵
+  </text>
+  
+  <!-- 'A1-B1' Badge -->
+  <g transform="translate(256, 465)">
+    <rect x="-60" y="-18" width="120" height="36" rx="18" fill="#3E2723" />
+    <text x="0" y="2" 
+          font-family="'Plus Jakarta Sans', sans-serif" 
+          font-size="16" 
+          font-weight="800" 
+          fill="#FFF8E1" 
+          text-anchor="middle" 
+          dominant-baseline="middle" 
+          letter-spacing="1">
+      A1-B1
+    </text>
+  </g>
+</svg>

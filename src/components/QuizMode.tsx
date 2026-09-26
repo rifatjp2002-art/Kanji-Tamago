@@ -221,6 +221,69 @@ export const QuizMode: React.FC = () => {
     }
   };
 
+  // Global Keyboard event listeners for lightning-fast quiz taking
+  useEffect(() => {
+    if (isConfiguring || isFinished || !currentQ) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Avoid firing when user is typing in general text inputs
+      const activeEl = document.activeElement;
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+        return;
+      }
+
+      const key = e.key.toLowerCase();
+
+      // If already answered, let them press Space/Enter/ArrowRight to go to next
+      if (isAnswered) {
+        if (key === ' ' || key === 'enter' || key === 'arrowright') {
+          e.preventDefault();
+          handleNext();
+        } else if (key === 'v') {
+          e.preventDefault();
+          if (currentQ.promptJa) {
+            speakJapanese(currentQ.promptJa);
+          }
+        } else if (key === 'h') {
+          e.preventDefault();
+          if (currentQ.kanjiId) {
+            handleToggleHard(currentQ.kanjiId);
+          }
+        }
+        return;
+      }
+
+      // If not yet answered, let them choose options
+      // Support 1-4 keys
+      if (key === '1' || key === '2' || key === '3' || key === '4') {
+        e.preventDefault();
+        const index = parseInt(key, 10) - 1;
+        if (index < currentQ.options.length) {
+          handleSelectOption(index);
+        }
+      }
+      // Support a-d keys
+      else if (key === 'a') {
+        e.preventDefault();
+        handleSelectOption(0);
+      } else if (key === 'b') {
+        e.preventDefault();
+        handleSelectOption(1);
+      } else if (key === 'c') {
+        e.preventDefault();
+        if (currentQ.options.length > 2) handleSelectOption(2);
+      } else if (key === 'd') {
+        e.preventDefault();
+        if (currentQ.options.length > 3) handleSelectOption(3);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isConfiguring, isFinished, isAnswered, currentIndex, currentQ, questions.length]);
+
   // Calculate scores
   const correctCount = userAnswers.filter((a) => a.isCorrect).length;
   const wrongCount = userAnswers.filter((a) => !a.isCorrect).length;
@@ -250,7 +313,7 @@ export const QuizMode: React.FC = () => {
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold mb-3">
                 <Sparkles className="h-3.5 w-3.5" />
-                <span>মাস্টারি কুইজ ইঞ্জিন · ডায়নামিক ১,৫০০+ প্রশ্ন</span>
+                <span>মাস্টারি কুইজ ইঞ্জিন · ডায়নামিক ৩,৬৮২টি প্রশ্ন</span>
               </div>
               <h1 className="font-serif text-2xl sm:text-4xl font-bold text-stone-100 tracking-tight flex items-center gap-2.5">
                 <span>🎯 কাঞ্জি কুইজ স্টুডিও</span>
@@ -266,7 +329,7 @@ export const QuizMode: React.FC = () => {
                 <BookOpen className="h-4 w-4 text-amber-400" />
                 <div>
                   <div className="text-[10px] text-stone-400">মোট প্রশ্ন ক্ষমতা</div>
-                  <div className="font-bold text-stone-100 text-sm">১,৫০০+ ইউনিক প্রশ্ন</div>
+                  <div className="font-bold text-stone-100 text-sm">৩,৬৮২টি ইউনিক প্রশ্ন</div>
                 </div>
               </div>
 
@@ -409,7 +472,7 @@ export const QuizMode: React.FC = () => {
               {[
                 {
                   id: 'all',
-                  title: '🎲 মেগা মিক্সড অল (১,৫০০+ প্রশ্ন)',
+                  title: '🎲 মেগা মিক্সড অল (৩,৬৮২টি প্রশ্ন)',
                   desc: 'কাঞ্জি, কানা, অন, কুন, অর্থ, বাক্য ও স্ট্রোক মিলিয়ে মিশ্রিত',
                   badge: 'সেরা মোড',
                 },
@@ -1046,6 +1109,28 @@ export const QuizMode: React.FC = () => {
             </button>
           </div>
         )}
+      </div>
+
+      {/* Quiet Minimalist Keyboard Shortcuts Hint */}
+      <div className="text-center text-[10px] text-stone-500 font-sans flex flex-wrap items-center justify-center gap-1.5 pt-1.5 select-none">
+        <span>⌨️ কীবোর্ড শর্টকাট:</span>
+        <span className="bg-[#1c202a] border border-stone-800 text-stone-400 px-1 py-0.5 rounded font-mono">1 - 4</span>
+        <span>বা</span>
+        <span className="bg-[#1c202a] border border-stone-800 text-stone-400 px-1 py-0.5 rounded font-mono">A - D</span>
+        <span>অপশন সিলেক্ট</span>
+        <span className="text-stone-700">·</span>
+        <span className="bg-[#1c202a] border border-stone-800 text-stone-400 px-1 py-0.5 rounded font-mono">Space/Enter</span>
+        <span>পরবর্তী</span>
+        {currentQ.kanjiId && (
+          <>
+            <span className="text-stone-700">·</span>
+            <span className="bg-[#1c202a] border border-stone-800 text-stone-400 px-1 py-0.5 rounded font-mono">H</span>
+            <span>কঠিন তালিকায় সেভ</span>
+          </>
+        )}
+        <span className="text-stone-700">·</span>
+        <span className="bg-[#1c202a] border border-stone-800 text-stone-400 px-1 py-0.5 rounded font-mono">V</span>
+        <span>উচ্চারণ</span>
       </div>
     </div>
   );
