@@ -3,7 +3,6 @@ import { allLessons, defaultToggles } from './data/allLessons';
 import { lessonContextGuides } from './data/lessonContextGuides';
 import { KanjiItem, DisplayToggles, KanjiCategory } from './types/kanji';
 import { Navbar, MainTabType } from './components/Navbar';
-import { OfflineIndicator } from './components/OfflineIndicator';
 import { HomeDashboard } from './components/HomeDashboard';
 import { KanjiCard } from './components/KanjiCard';
 import { KanjiDrawModal } from './components/KanjiDrawModal';
@@ -212,7 +211,7 @@ export default function App() {
         onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
-      <main className="mx-auto max-w-7xl px-3 sm:px-8 pt-4 sm:pt-6 pb-16 md:pb-8">
+      <main className="mx-auto max-w-7xl px-3 sm:px-8 pt-4 sm:pt-6 pb-[calc(5rem+env(safe-area-inset-bottom,0px))] md:pb-8">
         {/* VIEW 1: Home Dashboard */}
         {currentTab === 'home' && (
           <HomeDashboard
@@ -521,9 +520,6 @@ export default function App() {
           onClose={() => setIsExportOpen(false)}
         />
       )}
-
-      {/* Connectivity Banner Indicator */}
-      <OfflineIndicator />
     </div>
   );
 }

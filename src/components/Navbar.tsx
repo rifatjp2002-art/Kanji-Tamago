@@ -17,8 +17,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   return (
     <>
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-30 border-b border-[#222733] bg-[#11141a]/90 px-3 py-2 sm:px-8 sm:py-2.5 backdrop-blur-md shadow-md">
+      {/* Top Navbar - Edge to Edge with Safe Area */}
+      <header className="sticky top-0 z-30 border-b border-[#222733] bg-[#11141a]/90 px-3 pt-[calc(0.5rem+env(safe-area-inset-top,0px))] pb-2 sm:px-8 sm:py-2.5 backdrop-blur-md shadow-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           {/* Brand / Logo */}
           <button
@@ -102,8 +102,8 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </header>
 
-      {/* Mobile Bottom Navigation Bar (Shown ONLY on mobile < md) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-[#222733] bg-[#11141a]/95 backdrop-blur-lg px-2 py-1 shadow-xl">
+      {/* Mobile Bottom Navigation Bar (Shown ONLY on mobile < md) - Edge to Edge with Safe Area */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-[#222733] bg-[#11141a]/95 backdrop-blur-lg px-2 pt-1.5 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] shadow-xl">
         <div className="grid grid-cols-4 gap-1 max-w-md mx-auto">
           <button
             onClick={() => onSelectTab('home')}
